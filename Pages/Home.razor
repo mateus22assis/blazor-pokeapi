@@ -1,0 +1,53 @@
+﻿@page "/"
+@using System.Net.Http.Json
+@using BlazorPokeApi.Models
+@inject IHttpClientFactory ClientFactory
+
+<h3>Pokémon API</h3>
+
+<p>Digite o nome de um Pokémon e pressione Enter:</p>
+<input @bind="pokemonName" @bind:event="oninput" placeholder="Ex: pikachu" />
+<button @onclick="BuscarPokemon">Buscar</button>
+
+@if (pokemon != null)
+{
+    <div style="margin-top:20px;">
+        <img src="@pokemon.Sprites?.Other?.OfficialArtwork?.FrontDefault" alt="@pokemon.Name" width="200" />
+        <p><b>Id:</b> @pokemon.Id</p>
+        <p><b>Nome:</b> @pokemon.Name</p>
+        <p><b>Altura:</b> @pokemon.Height</p>
+        <p><b>Peso:</b> @pokemon.Weight</p>
+    </div>
+}
+else if (!string.IsNullOrWhiteSpace(erro))
+{
+    <p style="color:red">@erro</p>
+}
+
+@code {
+    private string? pokemonName;
+    private Pokemon? pokemon;
+    private string? erro;
+
+    private async Task BuscarPokemon()
+    {
+        erro = null;
+        pokemon = null;
+
+        if (string.IsNullOrWhiteSpace(pokemonName))
+        {
+            erro = "Digite o nome de um Pokémon!";
+            return;
+        }
+
+        try
+        {
+            var client = ClientFactory.CreateClient("PokeAPI");
+            pokemon = await client.GetFromJsonAsync<Pokemon>($"{pokemonName.ToLower()}");
+        }
+        catch
+        {
+            erro = "Pokémon não encontrado ou erro ao conectar à API.";
+        }
+    }
+}
